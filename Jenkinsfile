@@ -3,7 +3,7 @@ node {
     echo "node name is: ${env.NODE_NAME}"
     echo "build number is: ${env.BUILD_NUMBER}"
     def mavenHome = tool name: "maven 3.9.1"
-    properties([[$class: 'JobLocalConfiguration', changeReasonComment: ''], pipelineTriggers([pollSCM('* * * * *')])])
+    properties([buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '5', daysToKeepStr: '', numToKeepStr: '5')), [$class: 'JobLocalConfiguration', changeReasonComment: ''], pipelineTriggers([cron(''), pollSCM('* * * * *')])])
     stage('CheckOutCode'){
     git branch: 'development', changelog: false, credentialsId: '3b40bb9e-66b5-4fe0-843c-d52e3f399ede', poll: false, url: 'https://github.com/gurazala-mirchi/maven-web-application.git'
     }
