@@ -1,0 +1,73 @@
+pipeline{
+    agent any
+    tools{
+        maven "maven 3.9.1"
+    }
+    /*triggers{
+  pollSCM '* * * * *'
+  cron '* * * * *'
+    }*/
+    options {
+  buildDiscarder logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '4', daysToKeepStr: '', numToKeepStr: '5')
+  timestamps()
+}
+        stages{
+            stage('CheckOutCode'){
+                steps{
+                    sendSlackNotifications('STARTED')
+                    git branch: 'development', changelog: false, credentialsId: '3b40bb9e-66b5-4fe0-843c-d52e3f399ede', poll: false, url: 'https://github.com/gurazala-mirchi/maven-web-application.git'
+                }
+            }
+            stage('Build'){
+                steps{
+                    sh "mvn clean package"
+                }
+            }
+            stage('CodeQuality'){
+                steps{
+                    sh "mvn sonar:sonar"
+                }
+            }
+            stage('Artifactory'){
+                steps{
+                    sh "mvn deploy"
+                }
+            }
+            stage('DeploytoConatiner'){
+                steps{
+                    sshagent(['032c67db-e421-4222-991f-9eb8d79adfe8']) {
+            sh "scp -o StrictHostKeyChecking=no target/maven-web-application.war ec2-user@10.42.2.30:/opt/apache-tomcat-9.0.73/webapps/"
+                }
+            }
+        }
+    }
+    post {
+  success {
+    sendSlackNotifications('SUCCESS')
+  }
+  failure {
+    sendSlackNotifications('FAILURE')
+  }
+}
+}
+
+def sendSlackNotifications(String buildStatus = 'STARTED') {
+    
+    buildStatus = buildStatus ?: 'SUCCESS'
+
+    def color
+
+    if (buildStatus == 'STARTED') {
+        color = '#D4DADF'
+    } else if (buildStatus == 'SUCCESS') {
+        color = '#BDFFC3'
+    } else if (buildStatus == 'UNSTABLE') {
+        color = '#FFFE89'
+    } else {
+        color = '#FF9FA1'
+    }
+
+    def msg = "${buildStatus}: `${env.JOB_NAME}` #${env.BUILD_NUMBER}:\n${env.BUILD_URL}"
+
+    slackSend(color: color, message: msg, channel:'wallmart')
+}
