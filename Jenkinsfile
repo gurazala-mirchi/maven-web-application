@@ -4,6 +4,7 @@ node {
     echo "build number is: ${env.BUILD_NUMBER}"
     def mavenHome = tool name: "maven 3.9.1"
     properties([buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '5', daysToKeepStr: '', numToKeepStr: '5')), [$class: 'JobLocalConfiguration', changeReasonComment: ''], pipelineTriggers([cron(''), pollSCM('* * * * *')])])
+    try{
     stage('CheckOutCode'){
     git branch: 'development', changelog: false, credentialsId: '3b40bb9e-66b5-4fe0-843c-d52e3f399ede', poll: false, url: 'https://github.com/gurazala-mirchi/maven-web-application.git'
     }
@@ -19,6 +20,13 @@ node {
     stage('DeploytoConatainer'){
         sshagent(['032c67db-e421-4222-991f-9eb8d79adfe8']) {
             sh "scp -o StrictHostKeyChecking=no target/maven-web-application.war ec2-user@35.173.185.249:/opt/apache-tomcat-9.0.73/webapps/"
-}
+        }
     }
+        catch (e) {
+         currentBuild.result = 'FAILURE'
+        throw e
+        }
+        finally {
+        sendSlackNotifications(currentBuild.result)
+        }
 }
