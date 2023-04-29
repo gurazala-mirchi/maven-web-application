@@ -23,6 +23,9 @@ node {
             sh "scp -o StrictHostKeyChecking=no target/maven-web-application.war ec2-user@10.42.2.30:/opt/apache-tomcat-9.0.73/webapps/"
         }
     }
+        stage('Trigger DownStream JOB'){
+            build job:'pipelinescriptwithbuildparameters'
+        }
     }catch (e) {
          currentBuild.result = 'FAILURE'
         throw e
