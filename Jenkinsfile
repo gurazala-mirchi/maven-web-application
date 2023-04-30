@@ -23,7 +23,7 @@ node ('nodes'){
             sh "scp -o StrictHostKeyChecking=no target/maven-web-application.war ec2-user@10.42.2.30:/opt/apache-tomcat-9.0.73/webapps/"
         }
     }
-        stage('Trigger DownStream JOB'){
+            stage('Trigger DownStream JOB'){
             build job:'pipelinescriptwithbuildparameters'
         }
     }catch (e) {
@@ -34,7 +34,7 @@ node ('nodes'){
         sendSlackNotifications(currentBuild.result)
     }
 }//node closing
-def sendSlackNotifications(String buildStatus = 'STARTED') {
+/*def sendSlackNotifications(String buildStatus = 'STARTED') {
     
     buildStatus = buildStatus ?: 'SUCCESS'
 
@@ -53,4 +53,4 @@ def sendSlackNotifications(String buildStatus = 'STARTED') {
     def msg = "${buildStatus}: `${env.JOB_NAME}` #${env.BUILD_NUMBER}:\n${env.BUILD_URL}"
 
     slackSend(color: color, message: msg, channel: 'wallmart')
-}
+}*/
