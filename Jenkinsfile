@@ -1,3 +1,4 @@
+@Library('sharedlibsyt') _
 node ('nodes'){
     echo "job name is: ${env.JOB_NAME}"
     echo "node name is: ${env.NODE_NAME}"
